@@ -65,25 +65,6 @@ void apply_settings(const nbt::app::Lifecycle& lifecycle) {
   nbt::app::log_set_debug(!strcmp(lifecycle.settings().get("debug_log", "off"), "on"));
 }
 
-/* The menu's status line, at most 24 characters. */
-void status_line(const UnitResult* results, bool busy, char* out, size_t size) {
-  unsigned codes = 0, read = 0;
-  for (unsigned i = 0; i < diagnostics::kUnitCount; ++i) {
-    if (results[i].state != UnitResult::kRead) continue;
-    ++read;
-    codes += static_cast<unsigned>(results[i].total);
-  }
-  if (busy) {
-    snprintf(out, size, "Reading...");
-  } else if (!read) {
-    snprintf(out, size, "Not read");
-  } else if (!codes) {
-    snprintf(out, size, "No fault codes");
-  } else {
-    snprintf(out, size, "%u fault code%s", codes, codes == 1 ? "" : "s");
-  }
-}
-
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -163,7 +144,7 @@ int main(int argc, char** argv) {
     phone.show(results, busy);  // written only when it changed
 
     char status[25];
-    status_line(results, busy, status, sizeof(status));
+    diagnostics::overall(results, busy, true, status, sizeof(status));  // at most 24
     bool changed = false;
     lifecycle.tick(now, status, &changed);
     if (changed) apply_settings(lifecycle);

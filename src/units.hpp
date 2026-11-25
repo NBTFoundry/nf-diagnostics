@@ -54,6 +54,10 @@ void format_code(uint32_t dtc, char out[7]);
 const char* code_state(uint8_t status);
 /* A short summary: "3 codes", "no codes", "not read", "reading...". */
 void summary(const UnitResult& result, char* out, size_t size);
+/* The car as a whole: "3 fault codes in 2 units.", "No fault codes.", "No
+ * gateway reached.", "No unit answered.", "Not read yet." (`brief`: the
+ * menu's status line, at most 24 characters). */
+void overall(const UnitResult* results, bool busy, bool brief, char* out, size_t size);
 /* "DME (engine): 120308 active, 2A2A00 stored", cut to `size` with "...". */
 void unit_line(const Unit& unit, const UnitResult& result, char* out, size_t size);
 

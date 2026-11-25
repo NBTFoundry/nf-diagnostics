@@ -17,24 +17,8 @@ bool PhonePage::init() {
 
 void PhonePage::show(const UnitResult results[kUnitCount], bool busy) {
   if (!page_.available()) return;
-  unsigned codes = 0, units = 0, read = 0;
-  for (unsigned i = 0; i < kUnitCount; ++i) {
-    if (results[i].state != UnitResult::kRead) continue;
-    ++read;
-    codes += static_cast<unsigned>(results[i].total);
-    units += results[i].total ? 1u : 0u;
-  }
   char line[NBT_COMPANION_TEXT_MAX + 1];
-  if (busy) {
-    snprintf(line, sizeof(line), "Reading the car...");
-  } else if (!read) {
-    snprintf(line, sizeof(line), "Not read yet.");
-  } else if (!codes) {
-    snprintf(line, sizeof(line), "No fault codes.");
-  } else {
-    snprintf(line, sizeof(line), "%u fault code%s in %u unit%s.", codes, codes == 1 ? "" : "s",
-             units, units == 1 ? "" : "s");
-  }
+  overall(results, busy, false, line, sizeof(line));
   page_.begin();
   page_.title("Diagnostics");
   page_.text(line);

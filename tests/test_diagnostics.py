@@ -167,6 +167,7 @@ class FakeDiagnostics(threading.Thread):
     def __init__(self, sock, codes):
         super().__init__(daemon=True)
         self.sock, self.codes, self.moving, self.asked = sock, codes, False, []
+        self.route = True  # False: no gateway reached
 
     def run(self):
         while True:
@@ -180,7 +181,9 @@ class FakeDiagnostics(threading.Thread):
             uds = data[6:]
             self.asked.append((ecu, uds))
             status, answer = 1, b""  # no answer in time
-            if ecu in self.codes and uds == b"\x19\x02\xff":
+            if not self.route:
+                status = 3
+            elif ecu in self.codes and uds == b"\x19\x02\xff":
                 status = 0
                 answer = b"\x59\x02\xff" + b"".join(
                     struct.pack(">I", dtc)[1:] + bytes([st]) for dtc, st in self.codes[ecu])
@@ -237,7 +240,7 @@ class FaultCodesTest(unittest.TestCase):
         env = {
             "NBT_LAUNCH": "user", "DISPLAY": self.display, "LIBGL_ALWAYS_SOFTWARE": "1",
             "NBT_NO_AUDIO": "1", "NBT_DATA_DIR": str(self.tmp), "NBT_BRIDGE_CAPS": caps,
-            "NBT_DIAG_FD": "10",
+            "NBT_DIAG_FD": "10", "NBT_COMPANION_FD": "11", "NBT_COMPANION_EVENTS": str(self.events),
         }
         env.update({"NBT_CONTROLLER_FD": str(fixed.pop("controller"))} if "controller" in fixed else {})
         controller = (int(env["NBT_CONTROLLER_FD"]),) if "NBT_CONTROLLER_FD" in env else ()
@@ -264,6 +267,14 @@ class FaultCodesTest(unittest.TestCase):
         app.wait(r"BDC: read: state 3, 0 codes")
         self.assertEqual(len(self.car.asked), 1 + 8)
         self.assertEqual(app.stop(), 0, app.seen[-20:])
+
+    def test_no_gateway_is_said_once_read(self):
+        self.car.route = False
+        app = self.launch("show,diag,companion", {10: self.diag_app.fileno(), 11: self.page_fd})
+        app.wait(r"diagnostics on, phone page")
+        self.tap("read")
+        self.wait_page("No gateway reached.")
+        self.assertIn("DME (engine): no gateway\n", self.page())
 
     def test_codes_read_and_cleared_from_the_phone(self):
         env = {

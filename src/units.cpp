@@ -92,6 +92,40 @@ void summary(const UnitResult& result, char* out, size_t size) {
   }
 }
 
+void overall(const UnitResult* results, bool busy, bool brief, char* out, size_t size) {
+  unsigned codes = 0, units = 0, read = 0, failed = 0, unrouted = 0;
+  for (unsigned i = 0; i < kUnitCount; ++i) {
+    const UnitResult::State state = results[i].state;
+    if (state == UnitResult::kRead) {
+      ++read;
+      codes += static_cast<unsigned>(results[i].total);
+      units += results[i].total ? 1u : 0u;
+    } else if (state != UnitResult::kNotRead && state != UnitResult::kReading &&
+               state != UnitResult::kClearing) {
+      ++failed;
+      unrouted += state == UnitResult::kNoRoute ? 1u : 0u;
+    }
+  }
+  if (busy) {
+    snprintf(out, size, brief ? "Reading..." : "Reading the car...");
+  } else if (codes) {
+    if (brief) {
+      snprintf(out, size, "%u fault code%s", codes, codes == 1 ? "" : "s");
+    } else {
+      snprintf(out, size, "%u fault code%s in %u unit%s.", codes, codes == 1 ? "" : "s", units,
+               units == 1 ? "" : "s");
+    }
+  } else if (read) {
+    snprintf(out, size, brief ? "No fault codes" : "No fault codes.");
+  } else if (failed && unrouted == failed) {
+    snprintf(out, size, brief ? "No gateway" : "No gateway reached.");
+  } else if (failed) {
+    snprintf(out, size, brief ? "No answer" : "No unit answered.");
+  } else {
+    snprintf(out, size, brief ? "Not read" : "Not read yet.");
+  }
+}
+
 void unit_line(const Unit& unit, const UnitResult& result, char* out, size_t size) {
   char text[32];
   snprintf(out, size, "%s (%s): ", unit.name, unit.role);
