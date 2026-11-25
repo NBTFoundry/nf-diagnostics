@@ -23,12 +23,12 @@ RULE = "\n" + "=" * 72 + "\n\n"
 
 HEADER = """NBTFoundry
 
-NBTFoundry template
+NBTFoundry nf-diagnostics
 Copyright (c) 2026 Fabien Poussin
 Original software: MPL-2.0. You may redistribute and modify it under that license.
 This software comes WITHOUT ANY WARRANTY, to the extent permitted by law.
 Original NBTFoundry artwork: MPL-2.0. Trademark rights are separate.
-Source: https://github.com/NBTFoundry/template
+Source: https://github.com/NBTFoundry/nf-diagnostics
 When redistributing binaries, include applicable notices and provide the source required by the component licenses.
 """
 

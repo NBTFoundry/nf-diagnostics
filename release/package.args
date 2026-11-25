@@ -1,28 +1,42 @@
 # SPDX-License-Identifier: MPL-2.0
 # The package description for tools/package.py (NBTFoundry/manager): one argument
 # per line. `make package` and the release workflow both use it; they add the
-# version, sequence, key, output and executable. Bridge 1.7: the payload is a
-# module or a guest built with the NBT toolchain, run by NBT Manager's
-# nbt-runner (runner); the native form's lines are in native.args.
-# Capabilities and limits: NBTFoundry/manager, docs/app-bridge.md.
+# version, sequence, key, output and executable. Bridge 1.9: an ordinary
+# program built with the NBT toolchain (no runner: diagnostics need their own
+# process). It draws on the manager's surface (show) and is driven with the
+# controller. Optional: a status line, live settings, NBT Manager's
+# diagnostics (`diag`: the fault codes of eight control units, and clearing
+# them, which the manager allows only parked) and a page on the phone
+# (`companion`). Capabilities: NBTFoundry/manager, docs/app-bridge.md.
 --app
-myapp
+diagnostics
 --compat
 nbt_6.5_armv7
 --bridge
-1.7
+1.9
 --bridge-uses
-show,controller,runner
+show,controller
 --bridge-optional
-status,live-settings
+status,live-settings,diag,companion
+# Airbags, DME, second DME, gearbox, transfer case, DSC, steering, body
+# (src/units.cpp), in ascending order.
+--bridge-diag
+01:codes+clear,12:codes+clear,13:codes+clear,18:codes+clear,19:codes+clear,29:codes+clear,30:codes+clear,40:codes+clear
 # Settings: key|Label|default|choices, at most 12.
 --setting
 debug_log|Debug log|off|off,on
 # What the phone app shows before an install.
 --property
+Project|NBTFoundry nf-diagnostics
+--property
 Licence|MPL-2.0
 --text
-My App for NBT Manager.
+Fault codes of the car's main units: engine, gearbox, transfer case, stability control, airbags, steering, body.
+--text
+Read them on the iDrive screen or the phone, and clear them while the car stands still.
 --text=
 --text
-Source, licences and notices: https://github.com/NBTFoundry/template
+Codes are shown as BMW's tools print them, without descriptions.
+--text=
+--text
+Source, licences and notices: https://github.com/NBTFoundry/nf-diagnostics

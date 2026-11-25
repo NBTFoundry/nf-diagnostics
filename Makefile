@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: MPL-2.0
-# My App for NBT Manager. Targets:
-#   host              build/nbt-myapp-host (Linux, X11)
+# Diagnostics for NBT Manager. Targets:
+#   host              build/nbt-diagnostics-host (Linux, X11)
 #   test              the Python tests (the host build started as NBT Manager
 #                     starts it, the package, the notices)
 #   test-asan         the launches under AddressSanitizer and UBSan
 #   check-static-init nothing of ours runs before main
 #   notice            legal/NOTICE.txt (notice-check: it is current)
 # For the head unit, with the NBT toolchain, in the form FORM names:
-#   module            build/nbt-myapp.so, loaded into NBT Manager's nbt-runner
-#   guest             build/nbt-myapp.guest, nbt-runner's child process: the
+#   module            build/nbt-diagnostics.so, loaded into NBT Manager's nbt-runner
+#   guest             build/nbt-diagnostics.guest, nbt-runner's child process: the
 #                     form GPL or LGPL code needs
-#   native            build/nbt-myapp-native, a program of its own, without
+#   native            build/nbt-diagnostics-native, a program of its own, without
 #                     the runner; native-check: its imports exist on the car
 #   vm-test           FORM's payload in the SDK's VM
 #   package           FORM's signed package (APP_KEY; APP_VERSION, APP_SEQ)
@@ -18,9 +18,9 @@
 SHELL := /bin/bash
 
 # The application's id, as in release/package.args.
-APP := myapp
-# The form the package carries: module, guest or native (README, "The form").
-FORM ?= module
+APP := diagnostics
+# The form the package carries: native, as diagnostics need (README, "The form").
+FORM ?= native
 
 BUILD_DIR ?= build
 OBJ_DIR := $(BUILD_DIR)/obj
@@ -46,7 +46,7 @@ endif
 
 # --- Our sources. An upstream project goes in third_party/ as a submodule,
 # unmodified, compiled from its own source list with -w. ---
-APP_SRC := src/main.cpp
+APP_SRC := src/main.cpp src/units.cpp src/scanner.cpp src/phone_page.cpp src/screen.cpp
 APP_INC := $(NBT_SDK_INC) -Isrc
 APP_CXXFLAGS := -std=c++11 -O2 -Wall -Wextra -Werror -fno-exceptions -fno-rtti $(CXXFLAGS)
 ASAN_FLAGS := -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer
@@ -90,7 +90,7 @@ test: host
 
 test-asan: $(ASAN_APP)
 	ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
-		$(APP_ENV)=$(abspath $(ASAN_APP)) $(PYTHON) -m unittest discover -s tests -v -k Launch
+		$(APP_ENV)=$(abspath $(ASAN_APP)) $(PYTHON) -m unittest discover -s tests -v -k Launch -k FaultCodes
 
 # Our objects only: upstream's static constructors are its business.
 check-static-init: $(call objs,host,$(APP_SRC))
@@ -199,11 +199,10 @@ vm-test: $(NBT_SDK_RUNNER) $(PAYLOAD)
 		$^
 endif
 
-# --- The signed package: release/package.args describes it; a native
-# program declares no runner (release/native.args, read after it). ---
+# --- The signed package: release/package.args describes it. ---
 PACKAGE_INPUT ?= $(PAYLOAD)
 PACKAGE := $(BUILD_DIR)/$(APP)-$(APP_VERSION).nbt
-PACKAGE_ARGS := @release/package.args $(if $(filter native,$(FORM)),@release/native.args)
+PACKAGE_ARGS := @release/package.args
 
 package: $(PACKAGE_INPUT)
 	@test -f "$(APP_KEY)" || { echo "APP_KEY must name the RSA signing key"; exit 1; }

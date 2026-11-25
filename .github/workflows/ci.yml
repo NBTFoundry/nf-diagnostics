@@ -77,8 +77,7 @@ jobs:
           submodules: true
           persist-credentials: false
       - run: make -C sdk toolchain
-      # With the runner, then without.
-      - run: make -C app -j"$(nproc)" module guest
+      # Native only: diagnostics need their own process (README, "The form").
       - run: make -C app -j"$(nproc)" native native-check
       # legal/NOTICE.txt is current (it carries the toolchain's notices).
       - run: make -C app notice-check
