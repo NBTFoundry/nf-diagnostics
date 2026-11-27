@@ -83,7 +83,7 @@ make APP_KEY=/path/to/apps-signing-key.pem package    # build/diagnostics-<versi
 
 `release/package.args` describes the package: the id, the capabilities and
 the settings. `release/sdk.ref` is the SDK commit CI and releases build
-against. `make notice` writes `legal/NOTICE.txt`; `make test` fails when it
+against: [SDK 0.2.0](https://github.com/NBTFoundry/sdk/releases/tag/v0.2.0). `make notice` writes `legal/NOTICE.txt`; `make test` fails when it
 lags.
 
 ## Your own key
